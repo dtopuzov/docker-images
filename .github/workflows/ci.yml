@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+
+env:
+  REGISTRY: ghcr.io
+  OWNER: dtopuzov
+  CONTAINER_NAME: test-container
+  BRANCH_NAME: ${{ github.head_ref || github.ref_name }} 
+  # You can see more details on BRANCH_NAME value here:
+  # https://stackoverflow.com/questions/58033366/how-to-get-the-current-branch-within-github-actions
+
+jobs:
+  build:
+    name: Build Container
+    runs-on: ubuntu-22.04
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          lfs: true
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3.0.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      - name: Build and Push Container
+        uses: docker/build-push-action@v5.0.0
+        with:
+          context: ./${{ env.CONTAINER_NAME }}
+          tags: ${{ env.REGISTRY }}/${{ env.OWNER }}/${{ env.CONTAINER_NAME }}:${{ env.BRANCH_NAME }}
+          push: true
