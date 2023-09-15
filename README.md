@@ -4,7 +4,7 @@ Example how to build and publish docker images in GitHub registry.
 
 ## test-container
 
-The name of the container in this example is `test-container` and it is based on Debian 11 base image.
+The name of the container in this example is `test-container` and it is based on Ubuntu 22 base image.
 
 List of additionally installed software:
 

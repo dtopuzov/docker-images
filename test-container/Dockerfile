@@ -1,5 +1,5 @@
-# Use base Debian 11 (bullseye) image, see https://hub.docker.com/_/debian
-FROM debian:bullseye 
+# Use base Ubuntu 22.04 (jammy) image, see https://hub.docker.com/_/ubuntu
+FROM ubuntu:22.04 
 
 # See Dockerfile support for GitHub Actions
 # https://docs.github.com/en/actions/creating-actions/dockerfile-support-for-github-actions
@@ -12,12 +12,6 @@ RUN sed -i -e "s/ main[[:space:]]*\$/ main contrib/" /etc/apt/sources.list \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Install JDK
-RUN apt-get update \
-    && apt-get install -y openjdk-11-jdk openjdk-11-jre \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
-
 # Install Node.js
 RUN curl -sL https://deb.nodesource.com/setup_18.x | sudo bash - \
     && apt-get install -y nodejs \
@@ -25,26 +19,26 @@ RUN curl -sL https://deb.nodesource.com/setup_18.x | sudo bash - \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Chromium & Chromedriver
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends chromium chromium-driver \
-    && ln -s /usr/bin/chromium /usr/bin/chrome \
-    && ln -s /usr/bin/chromium /usr/bin/chromium-browser
+ARG CHROME_VERSION=117.0.5938.62
+RUN curl -s -o  /tmp/chrome-linux64.zip https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/$CHROME_VERSION/linux64/chrome-linux64.zip \
+    && unzip /tmp/chrome-linux64.zip -d /opt \
+    && ln -s /opt/chrome-linux64/chrome /usr/local/bin/chrome \
+    && rm /tmp/chrome-linux64.zip
+
+ARG CHROME_DRIVER_VERSION=117.0.5938.62
+RUN curl -s -o /tmp/chromedriver_linux64.zip https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/$CHROME_DRIVER_VERSION/linux64/chromedriver-linux64.zip \
+	&& unzip /tmp/chromedriver_linux64.zip -d /opt/selenium \
+	&& rm /tmp/chromedriver_linux64.zip \
+	&& mv /opt/selenium/chromedriver-linux64/chromedriver /opt/selenium/chromedriver  \
+	&& chmod 755 /opt/selenium/chromedriver \
+	&& ln -s /opt/selenium/chromedriver /usr/bin/chromedriver
 
 # Install Firefox & Geckodriver
-ARG firefox_ver=113.0
-ARG geckodriver_ver=0.33.0
 RUN apt-get update \
-    # Install dependencies for Firefox
-    && apt-get install -y --no-install-recommends --no-install-suggests `apt-cache depends firefox-esr | awk '/Depends:/{print$2}'` libasound2 libxt6 libxtst6 \
-    # Download and install Firefox
-    && curl -fL https://ftp.mozilla.org/pub/firefox/releases/${firefox_ver}/linux-x86_64/en-GB/firefox-${firefox_ver}.tar.bz2 | tar xjf - -C /opt \
-    && ln -s /opt/firefox/firefox /usr/bin/firefox \
-    && firefox --version \
-    # Download and install geckodriver
-    && curl -fL https://github.com/mozilla/geckodriver/releases/download/v${geckodriver_ver}/geckodriver-v${geckodriver_ver}-linux64.tar.gz | tar xzf - -C /usr/bin \
-    && chmod +x /usr/bin/geckodriver \
-    && geckodriver --version \
-    && rm -rf /var/lib/apt/lists/* /tmp/*
+    && apt-get install -y firefox firefox-geckodriver \
+    && firefox --version && geckodriver --version \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install xvfb
 RUN apt-get update \
