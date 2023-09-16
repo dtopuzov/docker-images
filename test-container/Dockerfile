@@ -14,7 +14,7 @@ RUN sed -i -e "s/ main[[:space:]]*\$/ main contrib/" /etc/apt/sources.list \
 
 # Install JDK
 RUN apt-get update \
-    && apt-get install -y openjdk-11-jdk openjdk-11-jre \
+    && apt-get install -y openjdk-17-jdk openjdk-17-jre \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
