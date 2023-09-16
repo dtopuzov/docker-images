@@ -1,5 +1,5 @@
 # Use base Debian 11 (bullseye) image, see https://hub.docker.com/_/debian
-FROM debian:bullseye 
+FROM debian:bullseye
 
 # See Dockerfile support for GitHub Actions
 # https://docs.github.com/en/actions/creating-actions/dockerfile-support-for-github-actions
@@ -8,7 +8,7 @@ FROM debian:bullseye
 ENV DEBIAN_FRONTEND=noninteractive
 RUN sed -i -e "s/ main[[:space:]]*\$/ main contrib/" /etc/apt/sources.list \
     && apt-get update \
-    && apt-get install -y tzdata apt-transport-https bzip2 rsync ca-certificates curl gnupg openssh-client git jq sudo zip unzip \
+    && apt-get install -y tzdata apt-transport-https bzip2 rsync ca-certificates curl wget gnupg openssh-client git jq sudo zip unzip \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -24,14 +24,31 @@ RUN curl -sL https://deb.nodesource.com/setup_18.x | sudo bash - \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Chromium & Chromedriver
+# Install Chrome & Chromedriver
+ARG chrome_ver=117.0.5938.88
+ARG chrome_driver_ver=117.0.5938.88
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends chromium chromium-driver \
-    && ln -s /usr/bin/chromium /usr/bin/chrome \
-    && ln -s /usr/bin/chromium /usr/bin/chromium-browser
+    && apt-get install -y unzip xvfb libxi6 libgconf-2-4 jq libjq1 libonig5 libxkbcommon0 libxss1 libglib2.0-0 libnss3 \
+    libfontconfig1 libatk-bridge2.0-0 libatspi2.0-0 libgtk-3-0 libpango-1.0-0 libgdk-pixbuf2.0-0 libxcomposite1 \
+    libxcursor1 libxdamage1 libxtst6 libappindicator3-1 libasound2 libatk1.0-0 libc6 libcairo2 libcups2 libxfixes3 \
+    libdbus-1-3 libexpat1 libgcc1 libnspr4 libgbm1 libpangocairo-1.0-0 libstdc++6 libx11-6 libx11-xcb1 libxcb1 libxext6 \
+    libxrandr2 libxrender1 gconf-service ca-certificates fonts-liberation libappindicator1 lsb-release xdg-utils \
+    && wget -N https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/${chrome_ver}/linux64/chrome-linux64.zip -P ~/  \
+    && unzip ~/chrome-linux64.zip -d ~/  \
+    && mv ~/chrome-linux64 ~/chrome  \
+    && ln -s ~/chrome/chrome /usr/bin/chrome \
+    && chmod +x ~/chrome \
+    && rm ~/chrome-linux64.zip \
+    && wget -N https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/${chrome_driver_ver}/linux64/chromedriver-linux64.zip -P ~/ \
+    && unzip ~/chromedriver-linux64.zip -d ~/ \
+    && mv ~/chromedriver-linux64 ~/chromedriver \
+    && mv ~/chromedriver/chromedriver /usr/bin/chromedriver \
+    && chmod +x /usr/bin/chromedriver \
+    && rm -rf ~/chromedriver-linux64.zip \
+    && rm -rf ~/chromedriver
 
 # Install Firefox & Geckodriver
-ARG firefox_ver=113.0
+ARG firefox_ver=117.0
 ARG geckodriver_ver=0.33.0
 RUN apt-get update \
     # Install dependencies for Firefox
@@ -45,9 +62,3 @@ RUN apt-get update \
     && chmod +x /usr/bin/geckodriver \
     && geckodriver --version \
     && rm -rf /var/lib/apt/lists/* /tmp/*
-
-# Install xvfb
-RUN apt-get update \
-    && apt-get install -y xvfb \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*

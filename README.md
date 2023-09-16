@@ -10,7 +10,7 @@ List of additionally installed software:
 
 - JDK 17
 - NodeJS 18
-- Chromium (and Chromedriver)
+- Chrome (and Chromedriver)
 - Firefox (and Geckodriver)
 - [Xvfb](https://en.wikipedia.org/wiki/Xvfb) to emulate display in case you need to run tests in non headless mode
 
